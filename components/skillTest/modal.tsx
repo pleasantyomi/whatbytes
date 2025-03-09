@@ -9,7 +9,7 @@ import { useState } from "react";
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { rank: string; percentile: string; score: string }) => void;
+  onSubmit: (data: { rank: number; percentile: number; score: number }) => void;
 }
 
 export default function Modal({ isOpen, onClose, onSubmit }: ModalProps) {
@@ -18,7 +18,7 @@ export default function Modal({ isOpen, onClose, onSubmit }: ModalProps) {
       label: "Rank",
       name: "rank",
       validationMessage: "Rank is required",
-      placeholder: "Rank"
+      placeholder: "Rank",
     },
     {
       label: "Percentile",
@@ -46,31 +46,34 @@ export default function Modal({ isOpen, onClose, onSubmit }: ModalProps) {
     score: "",
   });
 
-  const validateField = (name: string, value: string) => {
-    if (!value) return "This field is required";
+  const validateField = (name: string, value: string | number) => {
+    if (value === "" || value === null) return "This field is required";
 
-    if (name === "percentile") {
-      const num = Number.parseInt(value);
-      if (isNaN(num) || num < 0 || num > 100) {
-        return "Percentile must be between 0 and 100";
-      }
+    const num = Number(value);
+    if (name === "percentile" && (isNaN(num) || num < 0 || num > 100)) {
+      return "Percentile must be between 0 and 100";
     }
 
-    if (name === "score") {
-      const num = Number.parseInt(value);
-      if (isNaN(num) || num < 0 || num > 15) {
-        return "Score must be between 0 and 15";
-      }
+    if (name === "score" && (isNaN(num) || num < 0 || num > 15)) {
+      return "Score must be between 0 and 15";
     }
 
-    return ""; 
+    return "";
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const numValue = Number(value);
 
-    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: isNaN(numValue) ? value : numValue,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validateField(name, value),
+    }));
   };
 
   const handleSubmit = () => {
